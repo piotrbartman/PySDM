@@ -2,6 +2,7 @@
 Created at 03.06.2020
 """
 
+import numpy as np
 from PySDM.backends.numba.storage.storage import Storage
 from PySDM.backends.numba.impl._storage_methods import StorageMethods
 from PySDM.backends.numba.impl._algorithmic_step_methods import AlgorithmicStepMethods
@@ -51,6 +52,16 @@ class IndexedStorage(Storage):
 
     def max_pair(self, other, is_first_in_pair):
         AlgorithmicStepMethods.max_pair_body(self.data, other.data, is_first_in_pair.data, other.idx.data, len(other))
+        self.idx = None
+
+    def polynomial_pair(self, other, is_first_in_pair, coef_0, coef_1, pow_0=None, pow_1=None):
+        coef_0 = np.array(coef_0, dtype=Storage.FLOAT)
+        coef_1 = np.array(coef_1, dtype=Storage.FLOAT)
+        pow_0 = np.array(pow_0) or np.arange(len(coef_0), dtype=Storage.FLOAT)
+        pow_1 = np.array(pow_1) or np.arange(len(coef_1), dtype=Storage.FLOAT)
+        AlgorithmicStepMethods.polynomial_pair_body(
+            self.data, other.data, is_first_in_pair.data, other.idx.data, len(other),
+            coef_0, coef_1, pow_0, pow_1)
         self.idx = None
 
     def sort_pair(self, other, is_first_in_pair):

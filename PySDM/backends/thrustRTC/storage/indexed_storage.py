@@ -56,6 +56,14 @@ class IndexedStorage(Storage):
         AlgorithmicStepMethods.max_pair(self.data, other.data, is_first_in_pair.data, other.idx.data, len(other))
         self.idx = None
 
+    def polynomial_pair(self, other, is_first_in_pair, coef_0, coef_1, pow_0=None, pow_1=None):
+        pow_0 = pow_0 or range(len(coef_0))
+        pow_1 = pow_1 or range(len(coef_1))
+        AlgorithmicStepMethods.polynomial_pair_body(
+            self.data, other.data, is_first_in_pair.data, other.idx.data, len(other),
+            coef_0, coef_1, pow_0, pow_1)
+        self.idx = None
+
     def sort_pair(self, other, is_first_in_pair):
         AlgorithmicStepMethods.sort_pair(self.data, other.data, is_first_in_pair.data, other.idx.data, len(other))
 

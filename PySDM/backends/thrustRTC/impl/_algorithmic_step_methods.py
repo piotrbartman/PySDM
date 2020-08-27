@@ -104,6 +104,38 @@ class AlgorithmicStepMethods:
         }
         ''')
 
+    __polynomial_pair_body = trtc.For(
+        ['data_out', 'perm_in', 'is_first_in_pair', 'len_0', 'len_1', 'coef_0', 'coef_1', 'pow_0', 'pow_1'], "i", '''
+        data_out[i] = 0;
+        if (is_first_in_pair[i]) 
+        {
+            for (int j=0; j < len_0; ++j) {
+                data_out[i] += coef_0[j] * pow(data_in[idx[i]], pow_0[j]);
+            }
+            for (int j=0; j < len_1; ++j) {
+                data_out[i] += coef_1[j] * pow(data_in[idx[i + 1]], pow_1[j]);
+            }
+        }
+        ''')
+
+    @staticmethod
+    @nice_thrust(**NICE_THRUST_FLAGS)
+    def polynomial_pair(data_out, data_in, is_first_in_pair, idx, length, coef_0, coef_1, pow_0, pow_1):
+        # note: silently assumes that data_out is not permuted (i.e. not part of state)
+        # TODO
+        len_0 = trtc.DVInt64(len(coef_0))
+        len_1 = trtc.DVInt64(len(coef_1))
+        dcoef_0 = trtc.device_vector_from_dvs(coef_0)
+        dcoef_1 = trtc.device_vector_from_dvs(coef_1)
+        dpow_0 = trtc.device_vector_from_dvs(pow_0)
+        dpow_1 = trtc.device_vector_from_dvs(pow_1)
+        perm_in = trtc.DVPermutation(data_in, idx)
+        if length > 1:
+            AlgorithmicStepMethods.__sum_pair_body.launch_n(
+                length - 1,
+                [data_out, perm_in, is_first_in_pair, len_0, len_1, dcoef_0, dcoef_1, dpow_0, dpow_1])
+
+
     @staticmethod
     @nice_thrust(**NICE_THRUST_FLAGS)
     def sort_pair(data_out, data_in, is_first_in_pair, idx, length):
