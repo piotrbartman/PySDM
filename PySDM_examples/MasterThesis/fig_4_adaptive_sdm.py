@@ -2,10 +2,11 @@
 Created at 20.08.2020
 """
 
-from PySDM_examples.Shima_et_al_2009_Fig_2.setup import SetupA
-from PySDM_examples.Shima_et_al_2009_Fig_2.example import run
-from PySDM_examples.Shima_et_al_2009_Fig_2.spectrum_plotter import SpectrumPlotter
 from matplotlib import pyplot as plt
+
+from PySDM_examples.Shima_et_al_2009_Fig_2.example import run
+from PySDM_examples.Shima_et_al_2009_Fig_2.setup import SetupA
+from PySDM_examples.Shima_et_al_2009_Fig_2.spectrum_plotter import SpectrumPlotter
 
 
 def main(plot: bool = True, save: str = None):
@@ -44,7 +45,7 @@ def main(plot: bool = True, save: str = None):
             plotter.ax = axs[i, j]
             plotter.smooth = True
             for step, vals in mean_output.items():
-                plotter.plot(vals, step * setup.dt)
+                plotter.plot(exec_time, step * setup.dt)
 
             plotter.ylabel = r'$\bf{dt: ' + str(dt) + '}$\ndm/dlnr [g/m^3/(unit dr/r)]' if j == 0 else None
             plotter.xlabel = 'particle radius [µm]\n' \

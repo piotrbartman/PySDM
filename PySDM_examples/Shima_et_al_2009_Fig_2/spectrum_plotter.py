@@ -4,8 +4,9 @@ Created at 12.08.2019
 
 import numpy as np
 from matplotlib import pyplot
-from PySDM.physics.constants import si
+
 from PySDM.physics import formulae as phys
+from PySDM.physics.constants import si
 from .error_measure import error_measure
 
 
@@ -106,18 +107,19 @@ class SpectrumPlotter:
     def plot_data(self, setup, t, spectrum):
         if self.smooth:
             scope = self.smooth_scope
+            smooth = np.copy(spectrum)
             if t != 0:
                 new = np.copy(spectrum)
                 for _ in range(2):
-                    for i in range(scope, len(spectrum) - scope):
-                        new[i] = np.mean(spectrum[i - scope:i + scope + 1])
+                    for i in range(scope, len(smooth) - scope):
+                        new[i] = np.mean(smooth[i - scope:i + scope + 1])
                     scope = 1
-                    for i in range(scope, len(spectrum) - scope):
-                        spectrum[i] = np.mean(new[i - scope:i + scope + 1])
+                    for i in range(scope, len(smooth) - scope):
+                        smooth[i] = np.mean(new[i - scope:i + scope + 1])
 
             self.ax.plot(
                 setup.radius_bins_edges[:-scope - 1] * si.metres / si.micrometres,
-                spectrum[:-scope] * si.kilograms / si.grams,
+                smooth[:-scope] * si.kilograms / si.grams,
                 label=f"t = {t}s",
                 color=self.colors(t / (self.setup.steps[-1] * self.setup.dt))
             )
