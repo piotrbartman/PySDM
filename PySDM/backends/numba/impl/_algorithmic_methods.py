@@ -182,7 +182,7 @@ class AlgorithmicMethods:
                         scheme = "counting_sort"
                 self.scheme = scheme
                 if scheme == "counting_sort" or scheme == "counting_sort_parallel":
-                    self.tmp_idx = Storage.empty(idx.shape, idx.dtype)
+                    self.tmp_idx = Storage.empty(idx.shape, idx.dtype)  # TODO Storage -> Index
                 if scheme == "counting_sort_parallel":
                     self.cell_starts = Storage.empty((numba.config.NUMBA_NUM_THREADS, len(cell_start)), dtype=int)
 
@@ -223,13 +223,13 @@ class AlgorithmicMethods:
     @numba.njit(**{**conf.JIT_FLAGS, **{'parallel': False}})
     def normalize_body(prob, cell_id, cell_idx, cell_start, norm_factor, dt, dv, n_substeps):
         n_cell = cell_start.shape[0] - 1
-        for i in range(n_cell):
+        for i in range(n_cell):  # TODO: prange?
             sd_num = cell_start[i + 1] - cell_start[i]
             if sd_num < 2:
                 norm_factor[i] = 0
             else:
                 norm_factor[i] = dt / n_substeps[i] / dv * sd_num * (sd_num - 1) / 2 / (sd_num // 2)
-        for d in range(prob.shape[0]):
+        for d in range(prob.shape[0]):  #TODO: prange?
             prob[d] *= norm_factor[cell_idx[cell_id[d]]]
 
     @staticmethod
@@ -244,7 +244,7 @@ class AlgorithmicMethods:
         i = 0
         while i < new_length:
             if idx[i] == len(idx) or data[idx[i]] == 0:
-                new_length -= 1
+                new_length -= 1  # TODO: atomicAdd + prange
                 idx[i] = idx[new_length]
                 idx[new_length] = len(idx)
             else:

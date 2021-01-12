@@ -38,8 +38,8 @@ class Coalescence:
 
     def register(self, builder):
         self.core = builder.core
-        self.temp = self.core.PairwiseStorage.empty(self.core.n_sd, dtype=float)
-        self.prob = self.core.PairwiseStorage.empty(self.core.n_sd, dtype=float)
+        self.temp = self.core.PairwiseStorage.empty(self.core.n_sd, dtype=float)  # TODO used as Storage in normalize() but as PairwiseStorage in kernel
+        self.prob = self.core.PairwiseStorage.empty(self.core.n_sd, dtype=float)  # TODO
         self.is_first_in_pair = self.core.PairIndicator(self.core.n_sd)
         self.__n_substep = self.core.Storage.empty(self.core.mesh.n_cell, dtype=int)
         self.__n_substep[:] = 1
@@ -115,7 +115,7 @@ class Coalescence:
         )
 
     def compute_probability(self, prob, is_first_in_pair):
-        self.kernel(self.temp, is_first_in_pair)
+        self.kernel(self.temp, is_first_in_pair)  # TODO: move temp to kernel
         prob.max(self.core.particles['n'], is_first_in_pair)
         prob *= self.temp
 
