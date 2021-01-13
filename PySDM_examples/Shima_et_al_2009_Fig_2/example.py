@@ -4,7 +4,7 @@ Created at 08.08.2019
 
 import numpy as np
 
-from PySDM.backends import CPU
+from PySDM.backends import CPU, GPU
 from PySDM.builder import Builder
 from PySDM.environments import Box
 from PySDM.dynamics import Coalescence

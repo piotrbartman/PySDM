@@ -238,12 +238,12 @@ class AlgorithmicMethods:
             prob.data, cell_id.data, cell_idx.data, cell_start.data, norm_factor.data, dt, dv, n_substep.data)
 
     @staticmethod
-    @numba.njit(int64(int64[:], int64[:], int64), **{**conf.JIT_FLAGS, **{'parallel': False}})
-    def remove_zeros(data, idx, length) -> int:
+    @numba.njit(int64(int64[:], int64[:], int64, int64), **{**conf.JIT_FLAGS, **{'parallel': False}})
+    def remove_if(data, idx, length, equal) -> int:
         new_length = length
         i = 0
         while i < new_length:
-            if idx[i] == len(idx) or data[idx[i]] == 0:
+            if idx[i] == len(idx) or data[idx[i]] == equal:
                 new_length -= 1
                 idx[i] = idx[new_length]
                 idx[new_length] = len(idx)

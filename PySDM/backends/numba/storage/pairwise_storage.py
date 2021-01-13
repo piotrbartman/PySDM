@@ -39,6 +39,15 @@ class PairwiseStorage(Storage):
             len(other)
         )
 
+    def times_max(self, other, is_first_in_pair):
+        AlgorithmicStepMethods.times_max_pair_body(
+            self.data,
+            other.data,
+            is_first_in_pair.indicator.data,
+            other.idx.data,
+            len(other)
+        )
+
     def sort(self, other, is_first_in_pair):
         AlgorithmicStepMethods.sort_pair_body(
             self.data,

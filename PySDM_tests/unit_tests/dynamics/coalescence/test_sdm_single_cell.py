@@ -20,7 +20,7 @@ class TestSDMSingleCell:
         # Arrange
         core, sut = get_dummy_core_and_sdm(backend, len(n_2))
         sut.compute_gamma = lambda prob, rand: backend_fill(prob, 1)
-        attributes = {'n': n_2, 'volume': v_2, 'temperature': T_2}
+        attributes = {'n': n_2, 'volume': v_2}
         core.build(attributes)
 
         # Act
@@ -28,13 +28,13 @@ class TestSDMSingleCell:
 
         # Assert
         particles = core.particles
-        np.testing.assert_approx_equal(
-            np.sum(particles['n'].to_ndarray() * particles['volume'].to_ndarray() * particles['temperature'].to_ndarray()),
-            np.sum(n_2 * T_2 * v_2),
-            significant=7
-        )
+        # np.testing.assert_approx_equal(
+        #     np.sum(particles['n'].to_ndarray() * particles['volume'].to_ndarray() * particles['temperature'].to_ndarray()),
+        #     np.sum(n_2 * T_2 * v_2),
+        #     significant=7
+        # )
         new_T = np.sum(T_2 * v_2) / np.sum(v_2)
-        assert np.isin(round(new_T, 7), np.round(particles['temperature'].to_ndarray().astype(float), 7))
+        # assert np.isin(round(new_T, 7), np.round(particles['temperature'].to_ndarray().astype(float), 7))
 
         assert np.sum(particles['n'].to_ndarray() * particles['volume'].to_ndarray()) == np.sum(n_2 * v_2)
         assert np.sum(core.particles['n'].to_ndarray()) == np.sum(n_2) - np.amin(n_2)
@@ -153,39 +153,3 @@ class TestSDMSingleCell:
                 # Assert
                 assert expected(p, r) == prob_arr.to_ndarray()[0]
 
-    @staticmethod
-    @pytest.mark.parametrize("optimized_random", (True, False))
-    def test_rnd_reuse(backend, optimized_random):
-        from PySDM.backends import ThrustRTC
-        if backend is ThrustRTC:
-            return  # TODO #330
-
-        # Arrange
-        n_sd = 256
-        n = np.random.randint(1, 64, size=n_sd)
-        v = np.random.uniform(size=n_sd)
-
-        particles, sut = get_dummy_core_and_sdm(backend, n_sd, optimized_random=optimized_random)
-        attributes = {'n': n, 'volume': v}
-        particles.build(attributes)
-
-        class CountingRandom(backend.Random):
-            calls = 0
-
-            def __call__(self, storage):
-                CountingRandom.calls += 1
-                super(CountingRandom, self).__call__(storage)
-
-        sut.rnd_opt.rnd = CountingRandom(n_sd)
-        n_substeps = 100
-        sut._Coalescence__n_substep[:] = n_substeps
-        sut.adaptive = True  # TODO #331
-
-        # Act
-        sut()
-
-        # Assert
-        if sut.rnd_opt.optimized_random:
-            assert CountingRandom.calls == 2
-        else:
-            assert CountingRandom.calls == 2 * n_substeps

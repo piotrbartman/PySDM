@@ -91,6 +91,22 @@ class AlgorithmicStepMethods:
         perm_in = trtc.DVPermutation(data_in, idx)
         AlgorithmicStepMethods.__max_pair_body.launch_n(length, [data_out, perm_in, is_first_in_pair])
 
+    __times_max_pair_body = trtc.For(['data_out', 'perm_in', 'is_first_in_pair'], "i", '''
+        if (is_first_in_pair[i]) {
+            data_out[i] *= max(perm_in[i], perm_in[i + 1]);
+        } 
+        else {
+            data_out[i] = 0;
+        }
+        ''')
+
+    @staticmethod
+    @nice_thrust(**NICE_THRUST_FLAGS)
+    def times_max_pair(data_out, data_in, is_first_in_pair, idx, length):
+        # note: silently assumes that data_out is not permuted (i.e. not part of state)
+        perm_in = trtc.DVPermutation(data_in, idx)
+        AlgorithmicStepMethods.__times_max_pair_body.launch_n(length, [data_out, perm_in, is_first_in_pair])
+
     __sort_pair_body = trtc.For(['data_out', 'data_in', 'is_first_in_pair'], "i", '''
         if (is_first_in_pair[i]) {
             if (data_in[i] < data_in[i + 1]) {
