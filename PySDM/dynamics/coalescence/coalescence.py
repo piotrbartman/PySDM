@@ -83,7 +83,7 @@ class Coalescence:
         self.idx = self.core.particles._Particles__idx
         assert self.idx.shape == self.core.particles._Particles__idx.shape
         assert self.idx.dtype == self.core.particles._Particles__idx.dtype
-        self.multiplicities.data = self.core.particles['n'].data
+        self.multiplicities = self.core.particles['n']
         assert self.intensive.shape == self.core.particles.get_intensive_attrs().shape
         assert self.intensive.dtype == self.core.particles.get_intensive_attrs().dtype
         self.intensive = self.core.particles.get_intensive_attrs()
@@ -134,11 +134,10 @@ class Coalescence:
             cell_id
         )
         kernel(prob, is_first_in_pair)
-        prob.times_max(self.core.particles['n'], is_first_in_pair)
+        prob.times_max(multiplicities, is_first_in_pair)
         normalize(prob)
         compute_gamma(prob)
         coalescence(idx, intensive, extensive, prob, cell_id, cell_idx)
-        self.core.particles.attributes['volume'].mark_updated()
         # </listing>
 
     def compute_gamma(self, prob, rand):
