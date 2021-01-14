@@ -11,9 +11,7 @@ import ThrustRTC
 kernel = ThrustRTC.For(['data_out', 'perm_in', 'is_first_in_pair'], "i",
     '''
     if (is_first_in_pair[i]) 
-        data_out[i] *= max(perm_in[i], perm_in[i + 1]);
-    else 
-        data_out[i] = 0;
+        data_out[i/2] *= max(perm_in[i], perm_in[i + 1]);
     ''')
 
 def times_max_pair(data_out, data_in, is_first_in_pair, idx, length):
@@ -139,10 +137,7 @@ class AlgorithmicStepMethods:
 
     __sum_pair_body = trtc.For(['data_out', 'perm_in', 'is_first_in_pair'], "i", '''
         if (is_first_in_pair[i]) {
-            data_out[i] = perm_in[i] + perm_in[i + 1];
-        } 
-        else {
-            data_out[i] = 0;
+            data_out[i/2] = perm_in[i] + perm_in[i + 1];
         }
         ''')
 
@@ -151,4 +146,5 @@ class AlgorithmicStepMethods:
     def sum_pair(data_out, data_in, is_first_in_pair, idx, length):
         # note: silently assumes that data_out is not permuted (i.e. not part of state)
         perm_in = trtc.DVPermutation(data_in, idx)
+        trtc.Fill(data_out, trtc.DVDouble(0))
         AlgorithmicStepMethods.__sum_pair_body.launch_n(length, [data_out, perm_in, is_first_in_pair])

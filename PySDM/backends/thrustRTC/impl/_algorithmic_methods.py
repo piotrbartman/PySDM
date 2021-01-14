@@ -35,24 +35,15 @@ class AlgorithmicMethods:
             [dim, idx_length, displacement.data, courant.data, courant_length, cell_origin.data, position_in_cell.data])
 
     __coalescence_body = trtc.For(['n', 'volume', 'idx', 'idx_length', 'intensive', 'intensive_length', 'extensive', 'extensive_length', 'gamma', 'healthy', 'adaptive', 'subs', 'adaptive_memory'], "i", '''
-        if (gamma[i] == 0) {
-            if (adaptive) {
-                adaptive_memory[i] = 1;
-            }
-            return;
-        }
 
-        auto j = idx[i];
-        auto k = idx[i + 1];
+        auto j = idx[2*i];
+        auto k = idx[2*i + 1];
 
         if (n[j] < n[k]) {
-            j = idx[i + 1];
-            k = idx[i];
+            j = idx[2*i + 1];
+            k = idx[2*i];
         }
         auto g = (int64_t)(n[j] / n[k]);
-        if (adaptive) {
-            adaptive_memory[i] = (int64_t)(gamma[i] * subs / g);
-        }
         if (g > gamma[i]) {
             g = gamma[i];
         }
@@ -83,21 +74,19 @@ class AlgorithmicMethods:
                 extensive[attr + k] = extensive[attr + j];
             }
         }
-        if (n[k] == 0 || n[j] == 0) {
-            healthy[0] = 0;
-        }
         ''')
 
     @staticmethod
     @nice_thrust(**NICE_THRUST_FLAGS)
-    def coalescence(n, volume, idx, length, intensive, extensive, gamma, healthy, adaptive, cell_id, cell_idx, subs, adaptive_memory, collision_rate, collision_rate_deficit):
+    def coalescence(multiplicities, volume, idx, length, intensive, extensive, gamma, healthy,
+                    adaptive, cell_id, cell_idx, subs, adaptive_memory, collision_rate, collision_rate_deficit):
         idx_length = trtc.DVInt64(len(idx))
         intensive_length = trtc.DVInt64(len(intensive))
         extensive_length = trtc.DVInt64(len(extensive))
         adaptive_device = trtc.DVBool(adaptive)
         subs_device = trtc.DVInt64(subs[0])  # TODO #330
-        AlgorithmicMethods.__coalescence_body.launch_n(length - 1,
-            [n.data, volume.data, idx.data, idx_length, intensive.data, intensive_length, extensive.data, extensive_length, gamma.data, healthy.data, adaptive_device, subs_device, adaptive_memory.data])
+        AlgorithmicMethods.__coalescence_body.launch_n(length//2,
+            [multiplicities.data, volume.data, idx.data, idx_length, intensive.data, intensive_length, extensive.data, extensive_length, gamma.data, healthy.data, adaptive_device, subs_device, adaptive_memory.data])
         if adaptive:
             return trtc.Reduce(adaptive_memory.data.range(0, length-1), trtc.DVInt64(0), trtc.Maximum())
         else:

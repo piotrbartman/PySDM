@@ -19,7 +19,7 @@ class Storage:
         self.dtype = dtype
 
     def __getitem__(self, item):
-        if isinstance(item, slice):
+        if isinstance(item, slice) or isinstance(item[0], slice):
             dim = len(self.shape)
             start = item.start or 0
             stop = item.stop or self.shape[0]
