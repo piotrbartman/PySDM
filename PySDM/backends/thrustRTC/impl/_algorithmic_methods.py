@@ -276,12 +276,12 @@ class AlgorithmicMethods:
 
     @staticmethod
     @nice_thrust(**NICE_THRUST_FLAGS)
-    def remove_if(data, idx, length, equal) -> int:
+    def remove_if_equal(data, idx, length, value) -> int:
         idx_length = trtc.DVInt64(idx.size())
-        equal = trtc.DVInt64(equal)
+        value = trtc.DVInt64(value)
 
         # Warning: (potential bug source): reading from outside of array
-        AlgorithmicMethods.__remove_zeros_body.launch_n(length, [data, idx, idx_length, equal])
+        AlgorithmicMethods.__remove_zeros_body.launch_n(length, [data, idx, idx_length, value])
 
         trtc.Sort(idx)
 

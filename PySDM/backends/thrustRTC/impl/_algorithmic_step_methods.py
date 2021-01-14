@@ -6,6 +6,20 @@ from ..conf import trtc
 from PySDM.backends.thrustRTC.nice_thrust import nice_thrust
 from PySDM.backends.thrustRTC.conf import NICE_THRUST_FLAGS
 
+import ThrustRTC
+
+kernel = ThrustRTC.For(['data_out', 'perm_in', 'is_first_in_pair'], "i",
+    '''
+    if (is_first_in_pair[i]) 
+        data_out[i] *= max(perm_in[i], perm_in[i + 1]);
+    else 
+        data_out[i] = 0;
+    ''')
+
+def times_max_pair(data_out, data_in, is_first_in_pair, idx, length):
+    perm_in = trtc.DVPermutation(data_in, idx)
+    kernel.launch_n(length, [data_out, perm_in, is_first_in_pair])
+
 
 class AlgorithmicStepMethods:
 
@@ -91,21 +105,12 @@ class AlgorithmicStepMethods:
         perm_in = trtc.DVPermutation(data_in, idx)
         AlgorithmicStepMethods.__max_pair_body.launch_n(length, [data_out, perm_in, is_first_in_pair])
 
-    __times_max_pair_body = trtc.For(['data_out', 'perm_in', 'is_first_in_pair'], "i", '''
-        if (is_first_in_pair[i]) {
-            data_out[i] *= max(perm_in[i], perm_in[i + 1]);
-        } 
-        else {
-            data_out[i] = 0;
-        }
-        ''')
 
     @staticmethod
     @nice_thrust(**NICE_THRUST_FLAGS)
     def times_max_pair(data_out, data_in, is_first_in_pair, idx, length):
-        # note: silently assumes that data_out is not permuted (i.e. not part of state)
         perm_in = trtc.DVPermutation(data_in, idx)
-        AlgorithmicStepMethods.__times_max_pair_body.launch_n(length, [data_out, perm_in, is_first_in_pair])
+        kernel.launch_n(length, [data_out, perm_in, is_first_in_pair])
 
     __sort_pair_body = trtc.For(['data_out', 'data_in', 'is_first_in_pair'], "i", '''
         if (is_first_in_pair[i]) {

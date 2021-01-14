@@ -29,63 +29,49 @@ class AlgorithmicMethods:
                                                        position_in_cell.data)
 
     @staticmethod
-    @numba.njit(
-        void(int64[:], float64[:], int64[:], int64, float64[:, :], float64[:, :], float64[:], int64[:],
-             numba.boolean, int64[:], int64[:], int64[:], int64[:], int64[:], int64[:]),
-        **conf.JIT_FLAGS)
-    # TODO #195 reopen https://github.com/numba/numba/issues/5279 with minimal rep. ex.
-    def coalescence_body(n, volume, idx, length, intensive, extensive, gamma, healthy,
-                         adaptive, cell_id, cell_idx, subs, adaptive_memory, collision_rate, collision_rate_deficit):
-        for i in prange(length - 1):
-            if gamma[i] == 0:
-                continue
-
-            j = idx[i]
-            k = idx[i + 1]
+    @numba.njit(parallel=True, error_model='numpy')
+    def update_attributes(n, volume, idx, length,
+                          intensive, extensive, gamma):
+        for i in prange(length // 2):
+            j = idx[2 * i]
+            k = idx[2 * i + 1]
 
             if n[j] < n[k]:
                 j, k = k, j
-            prop = int(n[j] / n[k])
-
-            if adaptive:
-                adaptive_memory[cell_idx[cell_id[j]]] = max(adaptive_memory[cell_idx[cell_id[j]]],
-                                                            int(((gamma[i]) * subs[cell_idx[cell_id[j]]]) / prop))
-            g = min(int(gamma[i]), prop)
-            collision_rate_deficit[cell_idx[cell_id[j]]] += (int(gamma[i]) - prop) * n[k]
+            g = min(int(gamma[i]), int(n[j] / n[k]))
 
             if g == 0:
                 continue
 
-            collision_rate[cell_idx[cell_id[j]]] += g * n[k]
-
             new_n = n[j] - g * n[k]
             if new_n > 0:
                 n[j] = new_n
-                for ii in range(0, len(intensive)):
-                    intensive[ii, k] = (intensive[ii, k] * volume[k] + intensive[ii, j] * g * volume[j]) \
-                                      / (volume[k] + g * volume[j])
-                for ie in range(0, len(extensive)):
-                    extensive[ie, k] += g * extensive[ie, j]
+                for attr in range(0, len(intensive)):
+                    intensive[attr, k] = \
+                        (intensive[attr, k] * volume[k]
+                         + intensive[attr, j] * g * volume[j]) \
+                        / (volume[k] + g * volume[j])
+                for attr in range(0, len(extensive)):
+                    extensive[attr, k] += g * extensive[attr, j]
             else:  # new_n == 0
                 n[j] = n[k] // 2
                 n[k] = n[k] - n[j]
-                for ii in range(0, len(intensive)):
-                    intensive[ii, j] = (intensive[ii, k] * volume[k] + intensive[ii, j] * g * volume[j]) \
-                                      / (volume[k] + g * volume[j])
-                    intensive[ii, k] = intensive[ii, j]
-                for ie in range(0, len(extensive)):
-                    extensive[ie, j] = g * extensive[ie, j] + extensive[ie, k]
-                    extensive[ie, k] = extensive[ie, j]
-            if n[k] == 0 or n[j] == 0:
-                healthy[0] = 0
+                for attr in range(0, len(intensive)):
+                    intensive[attr, j] = \
+                        (intensive[attr, k] * volume[k]
+                         + intensive[attr, j] * g * volume[j]) \
+                        / (volume[k] + g * volume[j])
+                    intensive[attr, k] = intensive[attr, j]
+                for attr in range(0, len(extensive)):
+                    extensive[attr, j] = g * extensive[attr, j] \
+                                         + extensive[attr, k]
+                    extensive[attr, k] = extensive[attr, j]
 
     @staticmethod
-    def coalescence(n, volume, idx, length, intensive, extensive, gamma, healthy,
+    def coalescence(multiplicities, volume, idx, length, intensive, extensive, gamma, healthy,
                     adaptive, cell_id, cell_idx, subs, adaptive_memory, collision_rate, collision_rate_deficit):
-        AlgorithmicMethods.coalescence_body(n.data, volume.data, idx.data, length, intensive.data,
-                                            extensive.data, gamma.data, healthy.data,
-                                            adaptive, cell_id.data, cell_idx.data, subs.data, adaptive_memory.data,
-                                            collision_rate.data, collision_rate_deficit.data)
+        AlgorithmicMethods.update_attributes(multiplicities.data, volume.data, idx.data, length, intensive.data,
+                                             extensive.data, gamma.data)
 
     @staticmethod
     @numba.njit(**conf.JIT_FLAGS)
@@ -239,11 +225,11 @@ class AlgorithmicMethods:
 
     @staticmethod
     @numba.njit(int64(int64[:], int64[:], int64, int64), **{**conf.JIT_FLAGS, **{'parallel': False}})
-    def remove_if(data, idx, length, equal) -> int:
+    def remove_if_equal(data, idx, length, value) -> int:
         new_length = length
         i = 0
         while i < new_length:
-            if idx[i] == len(idx) or data[idx[i]] == equal:
+            if idx[i] == len(idx) or data[idx[i]] == value:
                 new_length -= 1
                 idx[i] = idx[new_length]
                 idx[new_length] = len(idx)
