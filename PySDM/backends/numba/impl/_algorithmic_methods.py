@@ -68,9 +68,8 @@ class AlgorithmicMethods:
                     extensive[attr, k] = extensive[attr, j]
 
     @staticmethod
-    def coalescence(multiplicities, volume, idx, length, intensive, extensive, gamma, healthy,
-                    adaptive, cell_id, cell_idx, subs, adaptive_memory, collision_rate, collision_rate_deficit):
-        AlgorithmicMethods.update_attributes(multiplicities.data, volume.data, idx.data, length, intensive.data,
+    def coalescence(multiplicities, intensive, extensive, volume, idx, gamma):
+        AlgorithmicMethods.update_attributes(multiplicities.data, volume.data, idx.data, len(idx), intensive.data,
                                              extensive.data, gamma.data)
 
     @staticmethod

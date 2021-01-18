@@ -148,11 +148,11 @@ class Coalescence:
         times_max = lambda prob, multiplicities, pair_flag: prob.times_max(multiplicities, pair_flag)
         volume_view = self.core.particles["volume"]
         # <listing>
-        # step 0: housekeeping
+        # step 0: removal of super-droplets with zero multiplicity
         remove_if_equal_0(idx,  # i/o
                           multiplicities)  # in
 
-        # step 1:
+        # step 1: cell-wise shuffling, pair flagging
         urand(u01, N_SD)
         shuffle_per_cell(cell_start,  # out
                          idx,  # i/o
@@ -161,7 +161,7 @@ class Coalescence:
         flag_pairs(pair_flag,  # out
                    cell_id, cell_idx, cell_start)  # in
 
-        # step 2:
+        # step 2: collision probability evaluation
         coalescence_kernel(prob,  # out
                            pair_flag, volume_view)  # in
 
@@ -171,7 +171,7 @@ class Coalescence:
         normalize(prob,  # i/o
                   dt, dv, cell_id, cell_idx, cell_start)  # in
 
-        # step 3:
+        # step 3: collision triggering and attribute updates
         urand(u01, N_SD // 2)
 
         compute_gamma(prob,  # i/o

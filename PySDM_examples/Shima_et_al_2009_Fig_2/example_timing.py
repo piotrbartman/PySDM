@@ -40,6 +40,10 @@ def main():
         settings.backend = backend
         nsds = [2 ** n for n in range(12, 19, 3)]
         key = backend.__name__
+        # if key == ThrustRTC.__name__:
+        #     times[key] = [4.519, 4.580,  7.308,  28.597,  193.039]
+        # else:
+        #     times[key] = [0.360, 1.150, 10.875, 137.859, 1062.220]
         times[key] = []
         for sd in nsds:
             settings.n_sd = sd
