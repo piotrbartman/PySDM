@@ -4,7 +4,7 @@ import pytest
 from PySDM.backends import ThrustRTC
 from PySDM.builder import Builder
 from PySDM.dynamics import Coalescence
-from PySDM.physics.coalescence_kernels import Golovin
+from PySDM.physics.coalescence_kernels import Golovin, Geometric, Electric, Hydrodynamic
 from PySDM.environments import Box
 from PySDM.initialisation.spectra import Exponential
 from PySDM.initialisation.spectral_sampling import ConstantMultiplicity
@@ -29,7 +29,8 @@ def check(n_part, dv, n_sd, rho, state, step):
 
 @pytest.mark.parametrize('croupier', ['local', 'global'])
 @pytest.mark.parametrize('adaptive', [True, False])
-def test_coalescence(backend, croupier, adaptive):
+@pytest.mark.parametrize('kernel', [Golovin, Geometric, Electric, Hydrodynamic])
+def test_coalescence(backend, croupier, adaptive, kernel):
     if backend == ThrustRTC and croupier == 'local':  # TODO #358
         return
     if backend == ThrustRTC and adaptive and croupier == 'global':  # TODO #329
@@ -45,13 +46,16 @@ def test_coalescence(backend, croupier, adaptive):
     norm_factor = n_part * dv
     rho = 1000 * si.kilogram / si.metre ** 3
 
-    kernel = Golovin(b=1.5e3)  # [s-1]
+    kernel_attr = {}
+    if kernel == Golovin:
+        kernel_attr['b'] = 1.5e3
+    ker = kernel(**kernel_attr) # [s-1]
     spectrum = Exponential(norm_factor=norm_factor, scale=X0)
     builder = Builder(n_sd=n_sd, backend=backend, formulae=formulae)
     builder.set_environment(Box(dt=dt, dv=dv))
     attributes = {}
     attributes['volume'], attributes['n'] = ConstantMultiplicity(spectrum).sample(n_sd)
-    builder.add_dynamic(Coalescence(kernel, croupier=croupier, adaptive=adaptive))
+    builder.add_dynamic(Coalescence(ker, croupier=croupier, adaptive=adaptive))
     core = builder.build(attributes)
 
     volumes = {}
