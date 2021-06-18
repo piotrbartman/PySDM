@@ -1,9 +1,10 @@
-from PySDM_examples.Kreidenweis_et_al_2003 import Settings, Simulation
-from PySDM.physics import si
-from PySDM.physics.constants import convert_to, ppb
-from PySDM.physics.aqueous_chemistry.support import AQUEOUS_COMPOUNDS, SPECIFIC_GRAVITY
 import numpy as np
+from PySDM_examples.Kreidenweis_et_al_2003 import Settings, Simulation
 from chempy import Substance
+
+from PySDM.physics import si
+from PySDM.physics.aqueous_chemistry.support import AQUEOUS_COMPOUNDS, SPECIFIC_GRAVITY
+from PySDM.physics.constants import convert_to, ppb
 
 
 class TestTable3:
@@ -73,8 +74,9 @@ class TestTable3:
         np.testing.assert_allclose(output['p_env'][-1], 939 * si.mbar, rtol=.005)
         np.testing.assert_allclose(output['T_env'][-1], 284.2 * si.K, rtol=.005)
         np.testing.assert_allclose(
-            settings.formulae.state_variable_triplet.rho_of_rhod_qv(rhod=output['rhod_env'][-1], qv=output['qv_env'][-1]*si.g/si.kg),
-            1.15 * si.kg / si.m**3,
+            settings.formulae.thermodynamic_state_variables.rho_of_rhod_qv(rhod=output['rhod_env'][-1],
+                                                                           qv=output['qv_env'][-1] * si.g / si.kg),
+            1.15 * si.kg / si.m ** 3,
             rtol=.005
         )
         assert output['ql'][-2] < .00055

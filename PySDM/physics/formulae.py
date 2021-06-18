@@ -3,6 +3,7 @@ import re
 from functools import lru_cache, partial
 
 import numba
+
 from PySDM import physics
 from PySDM.backends.numba import conf
 # noinspection PyUnresolvedReferences
@@ -44,6 +45,8 @@ def _c_inline(fun, return_type=None, **args):
             continue
         if stripped.startswith('def '):
             continue
+        if source == '' and not stripped.startswith('return '):
+            raise SyntaxError("one-liners accepted only")
         source += stripped
     source = source.replace("power(", "pow(")
     source = re.sub("^return ", "", source)
@@ -58,7 +61,7 @@ def _c_inline(fun, return_type=None, **args):
     return f'({return_type})({source})'
 
 
-def _pick(value: str, choices: dict):
+def _instantiate(value: str, choices: dict):
     for name, cls in choices.items():
         if name == value:
             return cls()
@@ -70,8 +73,8 @@ def _choices(module):
 
 
 @lru_cache()
-def _magick(value, module, fastmath):
-    return _boost(_pick(value, _choices(module)), fastmath)
+def _get_boosted_instance(class_name, module, fastmath):
+    return _boost(_instantiate(class_name, _choices(module)), fastmath)
 
 
 class Formulae:
@@ -87,27 +90,30 @@ class Formulae:
                  diffusion_kinetics: str = 'FuchsSutugin',
                  diffusion_thermics: str = 'Neglect',
                  ventilation: str = 'Neglect',
-                 state_variable_triplet: str = 'RhodThdQv',
+                 thermodynamic_state_variables: str = 'RhodThdQv',
                  particle_advection: str = 'ImplicitInSpace',
                  hydrostatics: str = 'Default'
                  ):
         self.seed = seed
         self.fastmath = fastmath
 
-        self.trivia = _magick('Trivia', physics.trivia, fastmath)
+        self.trivia = _get_boosted_instance('Trivia', physics.trivia, fastmath)
 
-        self.condensation_coordinate = _magick(condensation_coordinate, physics.condensation_coordinate, fastmath)
-        self.saturation_vapour_pressure = _magick(saturation_vapour_pressure, physics.saturation_vapour_pressure, fastmath)
-        self.latent_heat = _magick(latent_heat, physics.latent_heat, fastmath)
-        self.hygroscopicity = _magick(hygroscopicity, physics.hygroscopicity, fastmath)
-        self.drop_growth = _magick(drop_growth, physics.drop_growth, fastmath)
-        self.surface_tension = _magick(surface_tension, physics.surface_tension, fastmath)
-        self.diffusion_kinetics = _magick(diffusion_kinetics, physics.diffusion_kinetics, fastmath)
-        self.diffusion_thermics = _magick(diffusion_thermics, physics.diffusion_thermics, fastmath)
-        self.ventilation = _magick(ventilation, physics.ventilation, fastmath)
-        self.state_variable_triplet = _magick(state_variable_triplet, physics.state_variable_triplet, fastmath)
-        self.particle_advection = _magick(particle_advection, physics.particle_advection, fastmath)
-        self.hydrostatics = _magick(hydrostatics, physics.hydrostatics, fastmath)
+        self.condensation_coordinate = _get_boosted_instance(condensation_coordinate, physics.condensation_coordinate,
+                                                             fastmath)
+        self.saturation_vapour_pressure = _get_boosted_instance(saturation_vapour_pressure,
+                                                                physics.saturation_vapour_pressure, fastmath)
+        self.latent_heat = _get_boosted_instance(latent_heat, physics.latent_heat, fastmath)
+        self.hygroscopicity = _get_boosted_instance(hygroscopicity, physics.hygroscopicity, fastmath)
+        self.drop_growth = _get_boosted_instance(drop_growth, physics.drop_growth, fastmath)
+        self.surface_tension = _get_boosted_instance(surface_tension, physics.surface_tension, fastmath)
+        self.diffusion_kinetics = _get_boosted_instance(diffusion_kinetics, physics.diffusion_kinetics, fastmath)
+        self.diffusion_thermics = _get_boosted_instance(diffusion_thermics, physics.diffusion_thermics, fastmath)
+        self.ventilation = _get_boosted_instance(ventilation, physics.ventilation, fastmath)
+        self.thermodynamic_state_variables = _get_boosted_instance(thermodynamic_state_variables,
+                                                                   physics.thermodynamic_state_variables, fastmath)
+        self.particle_advection = _get_boosted_instance(particle_advection, physics.particle_advection, fastmath)
+        self.hydrostatics = _get_boosted_instance(hydrostatics, physics.hydrostatics, fastmath)
 
     def __str__(self):
         description = []

@@ -3,11 +3,12 @@ Zero-dimensional adiabatic parcel framework
 """
 
 import numpy as np
-from PySDM.initialisation.r_wet_init import r_wet_init, default_rtol
+
 from PySDM.initialisation.multiplicities import discretise_n
-from ..physics import constants as const
-from ._moist import _Moist
+from PySDM.initialisation.r_wet_init import r_wet_init, default_rtol
 from PySDM.state.mesh import Mesh
+from ._moist import _Moist
+from ..physics import constants as const
 
 
 class Parcel(_Moist):
@@ -42,7 +43,7 @@ class Parcel(_Moist):
     def register(self, builder):
         self.formulae = builder.core.formulae
         pd0 = self.formulae.trivia.p_d(self.p0, self.q0)
-        rhod0 = self.formulae.state_variable_triplet.rhod_of_pd_T(pd0, self.T0)
+        rhod0 = self.formulae.thermodynamic_state_variables.rhod_of_pd_T(pd0, self.T0)
         self.params = (self.q0, self.formulae.trivia.th_std(pd0, self.T0), rhod0, self.z0, 0)
         self.mesh.dv = self.formulae.trivia.volume_of_density_mass(rhod0, self.mass_of_dry_air)
 

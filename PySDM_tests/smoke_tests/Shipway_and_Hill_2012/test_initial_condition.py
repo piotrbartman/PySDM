@@ -1,13 +1,18 @@
-from PySDM_examples.Shipway_and_Hill_2012 import Simulation, Settings
-from PySDM.physics import si
 import numpy as np
+import pytest
+from PySDM_examples.Shipway_and_Hill_2012 import Simulation, Settings
+
+from PySDM.physics import Formulae
+from PySDM.physics import si
 
 
 class TestInitialCondition:
     @staticmethod
-    def test_initial_condition(plot=False):
+    @pytest.mark.parametrize("thermo_vars", ('ClimateMachine', 'RhodThdQv'))
+    def test_initial_condition(thermo_vars, plot=False):
         # Arrange
-        settings = Settings(n_sd_per_gridbox=100, w_1=1 * si.m / si.s)
+        formulae = Formulae(thermodynamic_state_variables=thermo_vars)
+        settings = Settings(n_sd_per_gridbox=100, w_1=1 * si.m / si.s, formulae=formulae)
         simulation = Simulation(settings)
 
         # Act

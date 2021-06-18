@@ -1,7 +1,7 @@
-from ..conf import trtc
-from PySDM.backends.thrustRTC.impl.nice_thrust import nice_thrust
 from PySDM.backends.thrustRTC.conf import NICE_THRUST_FLAGS
+from PySDM.backends.thrustRTC.impl.nice_thrust import nice_thrust
 from PySDM.backends.thrustRTC.impl.precision_resolver import PrecisionResolver
+from ..conf import trtc
 
 
 class PhysicsMethods:
@@ -9,9 +9,9 @@ class PhysicsMethods:
         phys = self.formulae
 
         self._temperature_pressure_RH_body = trtc.For(["rhod", "thd", "qv", "T", "p", "RH"], "i", f'''
-            T[i] = {phys.state_variable_triplet.T.c_inline(rhod="rhod[i]", thd="thd[i]")};
-            p[i] = {phys.state_variable_triplet.p.c_inline(rhod="rhod[i]", T="T[i]", qv="qv[i]")};
-            RH[i] = {phys.state_variable_triplet.pv.c_inline(p="p[i]", qv="qv[i]")} / {phys.saturation_vapour_pressure.pvs_Celsius.c_inline(T="T[i] - const.T0")};
+            T[i] = {phys.thermodynamic_state_variables.T.c_inline(rhod="rhod[i]", thd="thd[i]")};
+            p[i] = {phys.thermodynamic_state_variables.p.c_inline(rhod="rhod[i]", T="T[i]", qv="qv[i]")};
+            RH[i] = {phys.thermodynamic_state_variables.pv.c_inline(p="p[i]", qv="qv[i]")} / {phys.saturation_vapour_pressure.pvs_Celsius.c_inline(T="T[i] - const.T0")};
         '''.replace("real_type", PrecisionResolver.get_C_type()))
 
         self.__explicit_euler_body = trtc.For(("y", "dt", "dy_dt"), "i", f'''

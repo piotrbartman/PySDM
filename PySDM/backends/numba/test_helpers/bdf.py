@@ -1,12 +1,14 @@
-import PySDM.physics.constants as const
-from PySDM.backends.numba.numba import Numba
-from PySDM.backends.numba.conf import JIT_FLAGS
-import numpy as np
-import numba
-import scipy.integrate
 import types
 import warnings
 from functools import lru_cache
+
+import numba
+import numpy as np
+import scipy.integrate
+
+import PySDM.physics.constants as const
+from PySDM.backends.numba.conf import JIT_FLAGS
+from PySDM.backends.numba.numba import Numba
 
 idx_thd = 0
 idx_x = 1
@@ -64,10 +66,10 @@ def _make_solve(formulae):
     RH_eq = formulae.hygroscopicity.RH_eq
     sigma = formulae.surface_tension.sigma
     phys_radius = formulae.trivia.radius
-    phys_T = formulae.state_variable_triplet.T
-    phys_p = formulae.state_variable_triplet.p
-    phys_pv = formulae.state_variable_triplet.pv
-    phys_dthd_dt = formulae.state_variable_triplet.dthd_dt
+    phys_T = formulae.thermodynamic_state_variables.T
+    phys_p = formulae.thermodynamic_state_variables.p
+    phys_pv = formulae.thermodynamic_state_variables.pv
+    phys_dthd_dt = formulae.thermodynamic_state_variables.dthd_dt
     phys_lambdaD = formulae.diffusion_kinetics.lambdaD
     phys_lambdaK = formulae.diffusion_kinetics.lambdaK
     phys_DK = formulae.diffusion_kinetics.DK

@@ -1,12 +1,12 @@
 from typing import Dict, Optional
 
-from PySDM.physics import constants as const
+from PySDM.backends.thrustRTC.bisection import BISECTION
 from PySDM.backends.thrustRTC.conf import NICE_THRUST_FLAGS
 from PySDM.backends.thrustRTC.impl import nice_thrust
-from .precision_resolver import PrecisionResolver
-from PySDM.backends.thrustRTC.bisection import BISECTION
-from ..conf import trtc
 from PySDM.backends.thrustRTC.storage import Storage
+from PySDM.physics import constants as const
+from .precision_resolver import PrecisionResolver
+from ..conf import trtc
 
 
 class CondensationMethods():
@@ -144,9 +144,9 @@ class CondensationMethods():
             thd[i] += dt * dthd_dt_pred[i] / 2;
             qv[i] += dt * dqv_dt_pred[i] / 2;
 
-            T[i] = {phys.state_variable_triplet.T.c_inline(rhod='rhod_mean[i]', thd='thd[i]')};
-            p[i] = {phys.state_variable_triplet.p.c_inline(rhod='rhod_mean[i]', T='T[i]', qv='qv[i]')};
-            pv[i] = {phys.state_variable_triplet.pv.c_inline(p='p[i]', qv='qv[i]')};
+            T[i] = {phys.thermodynamic_state_variables.T.c_inline(rhod='rhod_mean[i]', thd='thd[i]')};
+            p[i] = {phys.thermodynamic_state_variables.p.c_inline(rhod='rhod_mean[i]', T='T[i]', qv='qv[i]')};
+            pv[i] = {phys.thermodynamic_state_variables.pv.c_inline(p='p[i]', qv='qv[i]')};
             lv[i] = {phys.latent_heat.lv.c_inline(T='T[i]')};
             pvs[i] = {phys.saturation_vapour_pressure.pvs_Celsius.c_inline(T='T[i] - const.T0')};
             RH[i] = pv[i] / pvs[i];
@@ -162,7 +162,7 @@ class CondensationMethods():
             "i", f'''
             auto dml_dt = (ml_new[i] - ml_old[i]) / dt;
             auto dqv_dt_corr = - dml_dt / (rhod_mean[i] * dv_mean);
-            auto dthd_dt_corr = {phys.state_variable_triplet.dthd_dt.c_inline(rhod='rhod_mean[i]', thd='thd[i]', T='T[i]', dqv_dt='dqv_dt_corr', lv='lv[i]')};
+            auto dthd_dt_corr = {phys.thermodynamic_state_variables.dthd_dt.c_inline(rhod='rhod_mean[i]', thd='thd[i]', T='T[i]', dqv_dt='dqv_dt_corr', lv='lv[i]')};
 
             thd[i] += dt * (dthd_dt_pred[i] / 2 + dthd_dt_corr);
             qv[i] += dt * (dqv_dt_pred[i] / 2 + dqv_dt_corr);

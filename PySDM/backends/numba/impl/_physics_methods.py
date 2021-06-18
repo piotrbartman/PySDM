@@ -1,5 +1,6 @@
 import numba
 from numba import prange
+
 from PySDM.backends.numba import conf
 from PySDM.physics import constants as const
 
@@ -7,9 +8,9 @@ from PySDM.physics import constants as const
 class PhysicsMethods:
     def __init__(self):
         pvs_C = self.formulae.saturation_vapour_pressure.pvs_Celsius
-        phys_T = self.formulae.state_variable_triplet.T
-        phys_p = self.formulae.state_variable_triplet.p
-        phys_pv = self.formulae.state_variable_triplet.pv
+        phys_T = self.formulae.thermodynamic_state_variables.T
+        phys_p = self.formulae.thermodynamic_state_variables.p
+        phys_pv = self.formulae.thermodynamic_state_variables.pv
         explicit_euler = self.formulae.trivia.explicit_euler
         phys_sigma = self.formulae.surface_tension.sigma
         phys_volume = self.formulae.trivia.volume
@@ -18,6 +19,7 @@ class PhysicsMethods:
         @numba.njit(**{**conf.JIT_FLAGS, 'fastmath': self.formulae.fastmath})
         def explicit_euler_body(y, dt, dy_dt):
             y[:] = explicit_euler(y, dt, dy_dt)
+
         self.explicit_euler_body = explicit_euler_body
 
         @numba.njit(**{**conf.JIT_FLAGS, 'fastmath': self.formulae.fastmath})

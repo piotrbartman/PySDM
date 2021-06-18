@@ -1,10 +1,12 @@
-from PySDM.physics import constants as const
-from PySDM.backends.numba import conf
-from PySDM.backends.numba.toms748 import toms748_solve
-import numba
-import numpy as np
 import math
 from functools import lru_cache
+
+import numba
+import numpy as np
+
+from PySDM.backends.numba import conf
+from PySDM.backends.numba.toms748 import toms748_solve
+from PySDM.physics import constants as const
 
 
 class CondensationMethods:
@@ -280,10 +282,10 @@ class CondensationMethods:
             phys_RH_eq=self.formulae.hygroscopicity.RH_eq,
             phys_sigma=self.formulae.surface_tension.sigma,
             radius=self.formulae.trivia.radius,
-            phys_T=self.formulae.state_variable_triplet.T,
-            phys_p=self.formulae.state_variable_triplet.p,
-            phys_pv=self.formulae.state_variable_triplet.pv,
-            phys_dthd_dt=self.formulae.state_variable_triplet.dthd_dt,
+            phys_T=self.formulae.thermodynamic_state_variables.T,
+            phys_p=self.formulae.thermodynamic_state_variables.p,
+            phys_pv=self.formulae.thermodynamic_state_variables.pv,
+            phys_dthd_dt=self.formulae.thermodynamic_state_variables.dthd_dt,
             phys_lambdaK=self.formulae.diffusion_kinetics.lambdaK,
             phys_lambdaD=self.formulae.diffusion_kinetics.lambdaD,
             phys_DK=self.formulae.diffusion_kinetics.DK,
