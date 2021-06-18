@@ -1,8 +1,14 @@
-from PySDM.physics import constants as const
 from numpy import power
 
+from PySDM.physics import constants as const
+from PySDM.physics.thermodynamic_state_variables._thermodynamic_state_variables import _ThermodynamicStateVariables
 
-class RhodThdQv:
+
+class RhodThdQv(_ThermodynamicStateVariables):
+    @staticmethod
+    def qv(density, energy, water, droplet_total_volume, dv):
+        return water
+
     # A14 in libcloudph++ 1.0 paper
     @staticmethod
     def T(rhod, thd):
